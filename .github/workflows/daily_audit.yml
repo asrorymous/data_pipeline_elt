@@ -1,0 +1,33 @@
+name: Daily Data Audit Pipeline
+
+on:
+  schedule:
+    # 02:00 AM UTC (Sesuaikan dengan zona waktu jika perlu)
+    - cron: "0 2 * * *"
+  workflow_dispatch: # Agar kita bisa jalankan manual untuk ngetes
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Pipeline
+        env:
+          # Mengambil kunci dari brankas GitHub
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+        run: node index.js
