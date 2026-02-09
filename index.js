@@ -24,24 +24,23 @@ async function runPipeline() {
     logger.info("🏁 PIPELINE SUCCESS: All stages completed safely.");
   } catch (err) {
     logger.error(`💀 PIPELINE FAILED: ${err.message}`);
-    throw err; // Lempar error agar ditangkap oleh penanganan di bawah
+    throw err;
   }
 }
 
 module.exports = { runPipeline };
 
-// Logika penutup untuk GitHub Actions / Eksekusi Manual
 if (require.main === module) {
   runPipeline()
     .then(async () => {
       logger.info("Pipeline finished, cleaning up connections...");
-      await db.pool.end(); // TUTUP KONEKSI DISINI
+      await db.pool.end();
       logger.info("✅ Database pool closed. Goodbye!");
       process.exit(0);
     })
     .catch(async (err) => {
       logger.error("Pipeline failed critical: " + err.message);
-      if (db.pool) await db.pool.end(); // TETAP TUTUP KONEKSI MESKI ERROR
+      if (db.pool) await db.pool.end();
       process.exit(1);
     });
 }
