@@ -8,21 +8,21 @@ async function transformAndCleanData() {
   INSERT INTO dim_users (external_id, user_name, user_email, validated_at, is_active, last_seen_at)
   SELECT 
     external_id, 
-    -- Sapu 1: Bersihkan spasi di awal/akhir nama dan jadikan UPPER
+    -- Normalize name (trim & uppercase)
     UPPER(TRIM(user_name)), 
-    -- Sapu 2: Kecilkan semua huruf email agar konsisten
+    -- Normalize email to lowercase
     LOWER(TRIM(user_email)), 
     CURRENT_TIMESTAMP,
     TRUE,
     CURRENT_TIMESTAMP
   FROM staging_users
   WHERE 
-    -- Saringan Email: Harus valid formatnya
+    -- Email format filter
     user_email LIKE '%@%.%' 
-    -- Saringan Nama: Tidak boleh NULL dan harus lebih dari 3 karakter bersih (bukan spasi)
+    -- Name length & nullity check
     AND user_name IS NOT NULL 
     AND LENGTH(TRIM(user_name)) > 3
-    -- Saringan Tambahan: Pastikan external_id-nya masuk akal
+    -- Identity check
     AND external_id IS NOT NULL
   ON CONFLICT (external_id) DO UPDATE SET
     user_name = EXCLUDED.user_name,
