@@ -1,8 +1,8 @@
 const db = require("../../config/database");
-const logger = require("../utils/logger"); // Menggunakan logger yang baru kita buat
+const logger = require("../utils/logger");
 
 async function initializeSchema() {
-  // Query 1: Tabel Staging (Tempat mendarat data mentah)
+  // Query 1: Staging Table
   const createStagingTable = `
     CREATE TABLE IF NOT EXISTS staging_users (
       id SERIAL PRIMARY KEY,
@@ -14,7 +14,7 @@ async function initializeSchema() {
     );
   `;
 
-  // Query 2: Tabel Dimensi/Produksi (Tempat data bersih & auditable)
+  // Query 2: Dim Table
   const createDimTable = `
     CREATE TABLE IF NOT EXISTS dim_users (
       user_key SERIAL PRIMARY KEY,
