@@ -2,7 +2,6 @@
 .env
 node_modules/
 notes/
-.note
 # Ignore audit logs from being pushed to repo
-logs/*.log
+logs/
 
