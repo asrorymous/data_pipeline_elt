@@ -178,7 +178,7 @@ DATABASE_URL=your_neon_connection_string
 4. Run the pipeline:
 
 ```
-node index.js
+npm start
 ```
 
 ---
