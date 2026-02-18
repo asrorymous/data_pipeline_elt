@@ -37,6 +37,8 @@ async function transformAndCleanData() {
     const result = await db.query(transformQuery);
 
     await db.query("COMMIT");
+    return result.rowCount;
+
     logger.info(
       `✅ Transformation Complete. Records affected: ${result.rowCount}`,
     );
