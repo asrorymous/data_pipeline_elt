@@ -1,34 +1,51 @@
 const db = require("../../config/database");
 
 async function loadUsersToStaging(users) {
-  // Auditor Check: Don't process if data is empty
-  if (!users || users.length === 0) return;
+  async function loadUsers(users) {
+    if (!users || users.length === 0) {
+      console.log("No users to load");
+      return;
+    }
 
-  console.log(`--- Starting Load Process: ${users.length} records ---`);
+    const client = await db.connect();
 
-  for (const user of users) {
     try {
-      // Use Parameterized Query to prevent SQL Injection ($1, $2, etc.)
-      const insertQuery = `
-        INSERT INTO staging_users (external_id, user_name, user_email, audit_status)
-        VALUES ($1, $2, $3, 'LOADED_FROM_API')
-        ON CONFLICT (external_id) 
-        DO UPDATE SET 
-          user_name = EXCLUDED.user_name,
-          user_email = EXCLUDED.user_email,
-          audit_status = 'UPDATED_FROM_API';
-      `;
+      console.time("LOAD_TIME");
+      await client.query("BEGIN");
 
-      const values = [user.id, user.name, user.email];
+      const values = [];
+      const placeholders = [];
 
-      await db.query(insertQuery, values);
-    } catch (error) {
-      // Auditor: Log the specific ID that failed, but don't stop the whole pipeline
-      console.error(`⚠️ Failed to load user ID ${user.id}:`, error.message);
+      users.forEach((user, index) => {
+        const base = index * 4;
+
+        placeholders.push(
+          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`,
+        );
+
+        values.push(user.id, user.name, user.email, new Date());
+      });
+
+      const query = `
+      INSERT INTO staging_users 
+      (external_id, user_name, user_email, extracted_at)
+      VALUES ${placeholders.join(",")}
+    `;
+
+      await client.query(query, values);
+
+      await client.query("COMMIT");
+      console.timeEnd("LOAD_TIME");
+
+      console.log(`Loaded ${users.length} users`);
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.error("Load failed:", err.message);
+      throw err;
+    } finally {
+      client.release();
     }
   }
-
-  console.log("✅ Loading Phase Complete.");
 }
 
 module.exports = { loadUsersToStaging };
